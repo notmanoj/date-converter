@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nepali Date Converter</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📅</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;--border:#e2e0d8;
+  --text:#1a1a18;--text2:#6b6a64;--text3:#767672;
+  --accent:#AFFF00;--accent-light:#f5ffe0;--orange:#FF4600;
+  --green:#527700;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.05);
+  --r:16px;--rs:10px;
+}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.logo{width:32px;height:32px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+header h1{font-size:16px;font-weight:600;letter-spacing:-.3px;}
+header p{margin-left:auto;font-size:12px;color:var(--text3);}
+.main{max-width:820px;margin:0 auto;padding:28px 20px 0;}
+
+
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:visible;}
+.panels{display:grid;grid-template-columns:1fr auto 1fr;}
+.panel{padding:24px 26px 22px;display:flex;flex-direction:column;gap:14px;}
+.panel-label{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);}
+.panel-cal{font-size:16px;font-weight:600;display:flex;align-items:center;gap:7px;}
+
+/* Inputs */
+.inputs{display:flex;gap:8px;align-items:flex-start;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);}
+.field input,.field select{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 8px;font-family:inherit;font-size:16px;font-weight:500;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;-moz-appearance:textfield;appearance:none;-webkit-appearance:none;}
+.field input::-webkit-inner-spin-button,.field input::-webkit-outer-spin-button{-webkit-appearance:none;}
+.field input:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(82,119,0,.2);}
+.field input.err,.field select.err{border-color:#e53e3e;background:#fff8f8;}
+.field input::placeholder{color:var(--text3);}
+.f-day{flex:0 0 62px;}.f-day input{width:62px;}
+.f-month{flex:1 1 0;min-width:0;}
+.f-year{flex:0 0 84px;}.f-year input{width:84px;}
+.hint{font-size:11px;color:#c0392b;line-height:1.3;display:none;}
+.hint.on{display:block;}
+
+/* Month select arrow */
+.sel-wrap{position:relative;}
+.sel-wrap::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--text3);pointer-events:none;}
+.sel-wrap select{padding-right:26px;cursor:pointer;width:100%;}
+.sel-wrap select option{background:white;color:var(--text);}
+
+/* Swap */
+.swap-col{display:flex;align-items:center;justify-content:center;padding:0 4px;position:relative;}
+.swap-col::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--border);}
+.swap-btn{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;transition:all .2s;box-shadow:var(--shadow);color:var(--text2);}
+.swap-btn:hover{border-color:var(--accent);color:var(--green);background:var(--accent-light);transform:rotate(180deg);}
+
+/* Output */
+.panel.out{display:flex;flex-direction:column;}
+.result{margin-top:auto;}
+.r-empty{font-size:13px;color:var(--text2);font-style:italic;padding-top:18px;opacity:.7;}
+.r-dow{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.r-dow span{width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.8;display:inline-block;}
+.r-date{font-size:clamp(22px,4vw,34px);font-weight:300;color:var(--orange);letter-spacing:-1px;line-height:1.1;}
+.r-date b{font-weight:600;}
+.r-np{font-size:14px;color:var(--text2);margin-top:2px;}
+.r-num{font-size:12px;color:var(--green);letter-spacing:.5px;margin-top:4px;}
+
+/* Actions */
+.actions{padding:14px 26px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.btn-go{background:var(--accent);color:#111;border:none;border-radius:var(--rs);padding:12px 26px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 2px 10px rgba(175,255,0,.25);}
+.btn-go:hover{background:#8fcc00;transform:translateY(-1px);}
+.btn-go:active{transform:none;}
+.btn-today{background:transparent;border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 16px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;}
+.btn-today:hover{border-color:var(--accent);color:var(--green);background:var(--accent-light);}
+.shortcut{margin-left:auto;font-size:11.5px;color:var(--text3);}
+kbd{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:10px;}
+
+/* Error */
+.err-bar{background:#fff1f0;border:1px solid #fccaca;border-radius:var(--rs);padding:9px 15px;font-size:13px;color:#c0392b;margin-top:10px;display:none;}
+.err-bar.on{display:block;}
+
+/* Info */
+.info{margin-top:18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px;display:flex;gap:14px;align-items:flex-start;box-shadow:var(--shadow);}
+.info-icon{font-size:26px;flex-shrink:0;}
+.info-name{font-size:14px;font-weight:600;margin-bottom:4px;}
+.info-meta{font-size:11px;color:var(--green);margin-bottom:7px;letter-spacing:.5px;}
+.info-fact{font-size:13px;color:var(--text2);line-height:1.65;font-weight:300;}
+.info-fact em{color:var(--text);font-style:normal;font-weight:500;}
+
+footer{text-align:center;padding:32px 20px 24px;font-size:13px;color:var(--text3);}
+footer a{color:var(--text2);text-decoration:none;font-weight:600;border-bottom:1.5px solid var(--accent);}
+footer a:hover{color:var(--green);}
+:focus-visible{outline:3px solid var(--green);outline-offset:3px;}
+@media(max-width:600px){
+  .panels{grid-template-columns:1fr;}
+  .swap-col{height:40px;padding:0 24px;}
+  .swap-col::before{top:50%;bottom:auto;left:0;right:0;width:auto;height:1px;}
+  .actions{flex-wrap:wrap;}
+  .shortcut{display:none;}
+  .btn-go,.btn-today{flex:1;text-align:center;}
+  header p{display:none;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🇳🇵</div>
+  <h1>Nepali Date Converter</h1>
+  <p>BS ↔ AD · All conversions run locally</p>
+</header>
+
+<main class="main">
+  <div class="card">
+    <div class="panels">
+      <!-- FROM -->
+      <div class="panel">
+        <div>
+          <div class="panel-label">From</div>
+          <div class="panel-cal" id="from-label"></div>
+        </div>
+        <div class="inputs">
+          <div class="field f-day">
+            <label for="inp-day">Day</label>
+            <input type="number" id="inp-day" placeholder="DD" min="1" max="32" autocomplete="off">
+            <div class="hint" id="hint-day"></div>
+          </div>
+          <div class="field f-month">
+            <label>Month</label>
+            <div class="sel-wrap">
+              <select id="inp-month"></select>
+            </div>
+          </div>
+          <div class="field f-year">
+            <label for="inp-year">Year</label>
+            <input type="number" id="inp-year" placeholder="YYYY" autocomplete="off" maxlength="4">
+            <div class="hint" id="hint-year"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SWAP -->
+      <div class="swap-col">
+        <button class="swap-btn" onclick="swapMode()" title="Swap" aria-label="Swap">⇄</button>
+      </div>
+
+      <!-- TO -->
+      <div class="panel out">
+        <div>
+          <div class="panel-label">To</div>
+          <div class="panel-cal" id="to-label"></div>
+        </div>
+        <div class="result" id="result">
+          <div class="r-empty">Enter a date and press Convert</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-go" onclick="convert()">Convert →</button>
+      <button class="btn-today" onclick="fillToday()">📍 Today</button>
+      <div class="shortcut">Press <kbd>Enter</kbd></div>
+    </div>
+  </div>
+
+  <div class="err-bar" id="err-bar"></div>
+
+  <div class="info">
+    <div class="info-icon">🇳🇵</div>
+    <div>
+      <div class="info-name">Nepali Bikram Sambat Calendar</div>
+      <div class="info-meta">Nepal · Official State Calendar · BS 2000–2082</div>
+      <div class="info-fact">
+        The official calendar of <em>Nepal</em>. Each month's length is set by astronomical observation — there is no fixed formula or pattern. It runs <em>56–57 years ahead</em> of Gregorian. <em>1 Baisakh</em> (mid-April) marks the Nepali New Year. Conversion anchor: <em>1 Baisakh 2052 BS = 14 April 1995 AD</em>.
+      </div>
+    </div>
+  </div>
+
+  <footer>Designed &amp; Developed by <a href="https://manojux.com/" target="_blank" rel="noopener noreferrer">Manoj Rai</a></footer>
+</main>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════
+//  BS DATA — taken exactly from the uploaded reference file
+//  which uses the same data that works correctly
+// ═══════════════════════════════════════════════════════════════
+const BS_DATA = {
+  2000:[30,32,31,32,31,30,30,30,29,30,29,31],2001:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2002:[31,31,32,32,31,30,30,29,30,29,30,30],2003:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2004:[30,32,31,32,31,30,30,30,29,30,29,31],2005:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2006:[31,31,32,32,31,30,30,29,30,29,30,30],2007:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2008:[31,31,31,32,31,30,30,30,29,30,29,31],2009:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2010:[31,31,32,32,31,30,30,29,30,29,30,30],2011:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2012:[31,31,31,32,31,30,30,30,29,30,29,31],2013:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2014:[31,31,32,32,31,30,30,29,30,29,30,30],2015:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2016:[31,31,31,32,31,30,30,30,29,30,29,31],2017:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2018:[31,31,32,32,31,30,30,29,30,29,30,30],2019:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2020:[31,31,31,32,31,30,30,30,29,30,29,31],2021:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2022:[31,31,32,32,31,30,30,29,30,29,30,30],2023:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2024:[31,31,31,32,31,30,30,30,29,30,29,31],2025:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2026:[31,31,32,32,31,30,30,29,30,29,30,30],2027:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2028:[31,31,31,32,31,30,30,30,29,30,29,31],2029:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2030:[31,31,32,32,31,30,30,29,30,29,30,30],2031:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2032:[31,31,31,32,31,30,30,30,29,30,29,31],2033:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2034:[31,31,32,32,31,30,30,29,30,29,30,30],2035:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2036:[31,31,31,32,31,30,30,30,29,30,29,31],2037:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2038:[31,31,32,32,31,30,30,29,30,29,30,30],2039:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2040:[31,31,31,32,31,30,30,30,29,30,29,31],2041:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2042:[31,31,32,32,31,30,30,29,30,29,30,30],2043:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2044:[31,31,31,32,31,30,30,30,29,30,29,31],2045:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2046:[31,31,32,32,31,30,30,29,30,29,30,30],2047:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2048:[31,31,31,32,31,30,30,30,29,30,29,31],2049:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2050:[31,31,32,32,31,30,30,29,30,29,30,30],2051:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2052:[31,31,31,32,31,30,30,30,29,30,29,31],2053:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2054:[31,31,32,32,31,30,30,29,30,29,30,30],2055:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2056:[31,31,31,32,31,30,30,30,29,30,29,31],2057:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2058:[31,31,32,32,31,30,30,29,30,29,30,30],2059:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2060:[31,31,31,32,31,30,30,30,29,30,29,31],2061:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2062:[31,31,32,32,31,30,30,29,30,29,30,30],2063:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2064:[31,31,31,32,31,30,30,30,29,30,29,31],2065:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2066:[31,31,32,32,31,30,30,29,30,29,30,30],2067:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2068:[31,31,31,32,31,30,30,30,29,30,29,31],2069:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2070:[31,31,32,32,31,30,30,29,30,29,30,30],2071:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2072:[31,31,31,32,31,30,30,30,29,30,29,31],2073:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2074:[31,31,32,32,31,30,30,29,30,29,30,30],2075:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2076:[31,31,31,32,31,30,30,30,29,30,29,31],2077:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2078:[31,31,32,32,31,30,30,29,30,29,30,30],2079:[31,32,31,32,31,30,30,30,29,29,30,31],
+  2080:[31,31,31,32,31,30,30,30,29,30,29,31],2081:[31,31,32,31,31,31,30,29,30,29,30,30],
+  2082:[31,32,31,32,31,30,30,29,30,29,30,30],
+};
+
+const BS_MONTHS_EN = ['Baisakh','Jestha','Ashadh','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'];
+const BS_MONTHS_NP = ['बैशाख','जेठ','असार','श्रावण','भाद्र','आश्विन','कार्तिक','मंसिर','पौष','माघ','फाल्गुन','चैत्र'];
+const AD_MONTHS    = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS_EN      = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// ═══════════════════════════════════════════════════════════════
+//  CONVERSION — taken exactly from the uploaded reference file
+//  Anchor: BS 2052 Baisakh 1 = AD 1995 April 14
+// ═══════════════════════════════════════════════════════════════
+const ANCHOR_AD  = new Date(1995, 3, 14); // April 14 1995
+const ANCHOR_BSY = 2052, ANCHOR_BSM = 0, ANCHOR_BSD = 1;
+
+function daysBetween(d1, d2) {
+  return Math.round((d2 - d1) / 86400000);
+}
+
+function adToBS(adDate) {
+  const delta = daysBetween(ANCHOR_AD, adDate);
+  let bsY = ANCHOR_BSY, bsM = ANCHOR_BSM, bsD = ANCHOR_BSD;
+  if (delta >= 0) {
+    for (let i = 0; i < delta; i++) {
+      bsD++;
+      if (bsD > BS_DATA[bsY][bsM]) { bsD = 1; bsM++; }
+      if (bsM === 12) { bsM = 0; bsY++; }
+    }
+  } else {
+    for (let i = 0; i < Math.abs(delta); i++) {
+      bsD--;
+      if (bsD === 0) { bsM--; if (bsM === -1) { bsM = 11; bsY--; } bsD = BS_DATA[bsY][bsM]; }
+    }
+  }
+  return { y: bsY, m: bsM, d: bsD };
+}
+
+function bsToAD(bsY, bsM, bsD) {
+  let totalDays = 0;
+  let y = ANCHOR_BSY, m = ANCHOR_BSM, d = ANCHOR_BSD;
+  const target  = bsY * 10000 + bsM * 100 + bsD;
+  const current = y   * 10000 + m   * 100 + d;
+  if (target >= current) {
+    while (!(y === bsY && m === bsM && d === bsD)) {
+      d++; totalDays++;
+      if (d > BS_DATA[y][m]) { d = 1; m++; }
+      if (m === 12) { m = 0; y++; }
+    }
+    return new Date(ANCHOR_AD.getTime() + totalDays * 86400000);
+  } else {
+    while (!(y === bsY && m === bsM && d === bsD)) {
+      d--; totalDays++;
+      if (d === 0) { m--; if (m === -1) { m = 11; y--; } d = BS_DATA[y][m]; }
+    }
+    return new Date(ANCHOR_AD.getTime() - totalDays * 86400000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UI STATE
+// ═══════════════════════════════════════════════════════════════
+let mode = 'ad2bs'; // 'ad2bs' or 'bs2ad'
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('from-label').textContent = m === 'ad2bs' ? '🌍 Gregorian (AD)' : '🇳🇵 Nepali (BS)';
+  document.getElementById('to-label').textContent   = m === 'ad2bs' ? '🇳🇵 Nepali (BS)'   : '🌍 Gregorian (AD)';
+  buildMonthSelect();
+  clearErrors();
+  fillToday();
+}
+
+function swapMode() {
+  setMode(mode === 'ad2bs' ? 'bs2ad' : 'ad2bs');
+}
+
+function buildMonthSelect() {
+  const sel = document.getElementById('inp-month');
+  const months = mode === 'ad2bs' ? AD_MONTHS : BS_MONTHS_EN;
+  sel.innerHTML = '';
+  months.forEach((mn, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = mn;
+    sel.appendChild(o);
+  });
+}
+
+// ── errors ──
+function setErr(inputId, hintId, msg) {
+  document.getElementById(inputId)?.classList.add('err');
+  const h = document.getElementById(hintId);
+  if (h) { h.textContent = msg; h.classList.add('on'); }
+}
+function clearErrors() {
+  ['inp-day','inp-year','inp-month'].forEach(id => document.getElementById(id)?.classList.remove('err'));
+  ['hint-day','hint-year'].forEach(id => { const h=document.getElementById(id); if(h){h.textContent='';h.classList.remove('on');} });
+  const eb = document.getElementById('err-bar'); eb.textContent=''; eb.classList.remove('on');
+}
+function showBanner(msg) { const eb=document.getElementById('err-bar'); eb.textContent=msg; eb.classList.add('on'); }
+function clearResult() { document.getElementById('result').innerHTML='<div class="r-empty">Enter a date and press Convert</div>'; }
+
+// ── convert ──
+function convert() {
+  clearErrors();
+  const dStr = document.getElementById('inp-day').value.trim();
+  const yStr = document.getElementById('inp-year').value.trim();
+  const mVal = parseInt(document.getElementById('inp-month').value); // 0-indexed
+
+  const d = parseInt(dStr);
+  const y = parseInt(yStr);
+  let bad = false;
+
+  if (!yStr) { setErr('inp-year','hint-year','Year is required.'); bad=true; }
+  else if (isNaN(y) || y < 1 || String(yStr).length > 4) { setErr('inp-year','hint-year','Enter a valid 4-digit year.'); bad=true; }
+  if (!dStr) { setErr('inp-day','hint-day','Day is required.'); bad=true; }
+  else if (isNaN(d) || d < 1) { setErr('inp-day','hint-day','Day must be at least 1.'); bad=true; }
+  if (bad) return;
+
+  const pad = n => String(n).padStart(2,'0');
+
+  if (mode === 'ad2bs') {
+    if (y < 1943 || y > 2026) { setErr('inp-year','hint-year','Year must be 1943–2026.'); return; }
+    const adDate = new Date(y, mVal, d);
+    if (adDate.getMonth() !== mVal) { setErr('inp-day','hint-day','Invalid date for this month.'); return; }
+    const bs = adToBS(adDate);
+    if (!BS_DATA[bs.y]) { showBanner('Date falls outside supported BS range (2000–2082).'); return; }
+    const dow = adDate.getDay();
+    document.getElementById('result').innerHTML = `
+      <div class="r-dow"><span></span>${DAYS_EN[dow]}</div>
+      <div class="r-date"><b>${bs.d}</b> ${BS_MONTHS_EN[bs.m]} <b>${bs.y}</b></div>
+      <div class="r-np">${bs.d} ${BS_MONTHS_NP[bs.m]} ${bs.y}</div>
+      <div class="r-num">${bs.y}-${pad(bs.m+1)}-${pad(bs.d)} <span style="opacity:.6">BS</span></div>`;
+  } else {
+    if (!BS_DATA[y]) { setErr('inp-year','hint-year','BS year must be 2000–2082.'); return; }
+    const maxD = BS_DATA[y][mVal];
+    if (d > maxD) { setErr('inp-day','hint-day',`${BS_MONTHS_EN[mVal]} ${y} BS only has ${maxD} days.`); return; }
+    const adDate = bsToAD(y, mVal, d);
+    const dow = adDate.getDay();
+    const gm = adDate.getMonth(), gd = adDate.getDate(), gy = adDate.getFullYear();
+    document.getElementById('result').innerHTML = `
+      <div class="r-dow"><span></span>${DAYS_EN[dow]}</div>
+      <div class="r-date"><b>${gd}</b> ${AD_MONTHS[gm]} <b>${gy}</b></div>
+      <div class="r-num">${gy}-${pad(gm+1)}-${pad(gd)} <span style="opacity:.6">AD</span></div>`;
+  }
+}
+
+function fillToday() {
+  clearErrors();
+  const t = new Date();
+  if (mode === 'ad2bs') {
+    document.getElementById('inp-day').value   = t.getDate();
+    document.getElementById('inp-month').value = t.getMonth(); // 0-indexed
+    document.getElementById('inp-year').value  = t.getFullYear();
+  } else {
+    const bs = adToBS(t);
+    document.getElementById('inp-day').value   = bs.d;
+    document.getElementById('inp-month').value = bs.m; // 0-indexed
+    document.getElementById('inp-year').value  = bs.y;
+  }
+  convert();
+}
+
+// Input guards
+document.getElementById('inp-year').addEventListener('input', function() {
+  if (this.value.length > 4) this.value = this.value.slice(0, 4);
+});
+document.getElementById('inp-day').addEventListener('input', function() {
+  const v = parseInt(this.value);
+  if (this.value !== '' && v < 1) this.value = 1;
+  if (v > 32) this.value = 32;
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter') convert(); });
+
+// Init
+setMode('ad2bs');
+fillToday();
+</script>
+</body>
+</html>
