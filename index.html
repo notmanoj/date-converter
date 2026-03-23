@@ -124,14 +124,19 @@ kbd { background:var(--surface2); border:1px solid var(--border); border-radius:
 .site-footer a { color:var(--text2); text-decoration:none; font-weight:600; border-bottom:1.5px solid var(--accent); padding-bottom:1px; transition:color 0.15s, border-color 0.15s; }
 .site-footer a:hover { color:#527700; border-color:#527700; }
 
+.swap-btn-mobile { display:none; }
 @media(max-width:600px){
-  .panels { grid-template-columns:1fr; }
-  .swap-col { height:40px; padding:0 24px; }
-  .swap-col::before { top:50%; bottom:auto; left:0; right:0; width:auto; height:1px; }
-  .panel.out { border-left:none; border-top:1px solid var(--border); }
-  .action-bar { flex-wrap:wrap; }
+  .converter-inner { display:flex; flex-direction:column; border:none; box-shadow:none; }
+  .panels { display:contents; }
+  .panel-from { order:1; }
+  .swap-col { display:none; }
+  .action-bar { order:2; border:none; border-radius:0; padding:10px 16px; gap:8px; flex-wrap:nowrap; }
+  .panel-to { order:3; }
+  .panel.out { border-left:none; border-top:none; }
   .hint { display:none; }
-  .btn-main,.btn-sec { flex:1; text-align:center; }
+  .btn-main { flex:1; text-align:center; }
+  .btn-sec { flex:1; text-align:center; }
+  .swap-btn-mobile { display:flex; flex-shrink:0; }
   header span { display:none; }
 }
 </style>
@@ -150,7 +155,7 @@ kbd { background:var(--surface2); border:1px solid var(--border); border-radius:
     <div class="converter-inner">
     <div class="panels">
       <!-- LEFT: Source input -->
-      <div class="panel">
+      <div class="panel panel-from">
         <div>
           <div class="panel-label">From</div>
           <div class="panel-cal-name" id="from-name"></div>
@@ -158,7 +163,7 @@ kbd { background:var(--surface2); border:1px solid var(--border); border-radius:
         <div class="date-inputs">
           <div class="df df-day">
             <label>Day</label>
-            <input type="number" id="inp-day" min="1" max="32" placeholder="DD"/>
+            <input type="number" id="inp-day" min="1" max="32" placeholder="DD" onfocus="this.select()"/>
           </div>
           <div class="df df-month">
             <label for="month-btn">Month</label>
@@ -171,18 +176,18 @@ kbd { background:var(--surface2); border:1px solid var(--border); border-radius:
           </div>
           <div class="df df-year">
             <label>Year</label>
-            <input type="number" id="inp-year" placeholder="Year"/>
+            <input type="number" id="inp-year" placeholder="Year" onfocus="this.select()"/>
           </div>
         </div>
       </div>
 
-      <!-- DIVIDER + swap -->
+      <!-- DIVIDER + swap (desktop only) -->
       <div class="swap-col">
         <button class="swap-btn" title="Swap calendars" aria-label="Swap calendars" onclick="swapCals()">⇄</button>
       </div>
 
       <!-- RIGHT: Output -->
-      <div class="panel out">
+      <div class="panel out panel-to">
         <div class="out-header">
           <div class="panel-label">To</div>
           <div class="panel-cal-name" id="to-name"></div>
@@ -196,6 +201,7 @@ kbd { background:var(--surface2); border:1px solid var(--border); border-radius:
     <div class="action-bar">
       <button class="btn-main" onclick="doConvert()">Convert →</button>
       <button class="btn-sec" onclick="fillToday()">📍 Today</button>
+      <button class="swap-btn swap-btn-mobile" title="Swap calendars" aria-label="Swap calendars" onclick="swapCals()">⇄</button>
       <div class="hint">Press <kbd>Enter</kbd></div>
     </div>
     </div>
