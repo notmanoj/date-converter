@@ -373,8 +373,28 @@ function pickFrom(id){
   renderTabs(); renderPanels(); renderMonths(true); renderInfo(); clearResult();
 }
 function swapCals(){
+  // Grab current result before swapping so we can populate it into the new "from" fields
+  const d=parseInt(document.getElementById('inp-day').value);
+  const m=getMonthVal();
+  const y=parseInt(document.getElementById('inp-year').value);
+  let converted=null;
+  if(d&&m&&y&&!isNaN(d)&&!isNaN(m)&&!isNaN(y)){
+    try{
+      const g=toGreg(fromCal,y,m,d);
+      if(g&&Math.abs(g.year)<=9999) converted=fromGreg(toCal,g.year,g.month,g.day);
+    }catch(e){}
+  }
   [fromCal,toCal]=[toCal,fromCal];
-  renderTabs(); renderPanels(); renderMonths(true); renderInfo(); clearResult();
+  renderTabs(); renderPanels(); renderMonths(true); renderInfo();
+  if(converted){
+    document.getElementById('inp-day').value=converted.day;
+    document.getElementById('inp-year').value=converted.year;
+    setMonthVal(converted.month);
+    renderMonths();
+    doConvert();
+  } else {
+    clearResult();
+  }
 }
 function clearResult(){
   document.getElementById('result-area').innerHTML='<div class="result-empty">Enter a date and press Convert</div>';
